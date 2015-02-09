@@ -3,12 +3,14 @@
 # for examples
 
 # If not running interactively, don't do anything
-[ -z "$PS1" ] && return
-PATH=$PATH:$HOME/.local/bin/:$HOME/Proyectos/fbuild/install/bin:$HOME/Recursos/idea-IC/bin/
-export PATH
-# don't put duplicate lines in the history. See bash(1) for more options
-# ... or force ignoredups and ignorespace
-HISTCONTROL=ignoredups:ignorespace
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# don't put duplicate lines or lines starting with space in the history.
+# See bash(1) for more options
+HISTCONTROL=ignoreboth
 
 # append to the history file, don't overwrite it
 shopt -s histappend
@@ -21,11 +23,15 @@ HISTFILESIZE=2000
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+shopt -s globstar
+
 # make less more friendly for non-text input files, see lesspipe(1)
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 # set variable identifying the chroot you work in (used in the prompt below)
-if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
 
@@ -72,20 +78,19 @@ if [ -x /usr/bin/dircolors ]; then
     alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
-    alias less='less -X'
-    alias qp='ps aux | grep '
+
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
-    alias ack='ack-grep'
-    alias smtest='python -m smtpd -n -c DebuggingServer localhost:1025'
 fi
 
 # some more ls aliases
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
-alias netdown='sudo ifconfig eth0 down'
+
+alias less='less -X'
+alias smtest='python -m smtpd -n -c DebuggingServer localhost:1025'
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
@@ -102,9 +107,14 @@ fi
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
-if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
+if ! shopt -oq posix; then
+  if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+  elif [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
+  fi
 fi
+
 function _update_ps1()
 {
    export PS1="$(~/.local/bin/powerline.py --mode flat $?)"
@@ -112,58 +122,29 @@ function _update_ps1()
 
 export PROMPT_COMMAND="_update_ps1"
 export WORKON_HOME="$HOME/.venvs" 
-export PROJECTS=$HOME/Proyectos
+export PROJECTS="$HOME/Proyects"
 
 function workon {
-    source $WORKON_HOME/$1/bin/activate
-    if [ -d $PROJECTS/$1 ]; then
-        cd $PROJECTS/$1
+    source "$WORKON_HOME/$1/bin/activate"
+    if [ -d "$PROJECTS/$1" ]; then
+        cd "$PROJECTS/$1"
     fi
     
 }
 
 function mkvenv {
-    mkdir -p $WORKON_HOME
-    cd $WORKON_HOME
-    virtualenv $WORKON_HOME/$1 $2
-    source $WORKON_HOME/$1/bin/activate
+    mkdir -p "$WORKON_HOME"
+    virtualenv "$WORKON_HOME/$1 $2"
+    source "$WORKON_HOME/$1/bin/activate"
 }
 
 function rmvenv {
     deactivate
-    rm -rf $WORKON_HOME/$1
+    rm -rf "$WORKON_HOME/$1"
 }
 
-PIP_DOWNLOAD_CACHE=$HOME/.cache/pip
+PIP_DOWNLOAD_CACHE="$HOME/.cache/pip"
 
-# add copyright notice to sourcefiles
-
-function add_license {
-    for x in $@; do  
-    echo $x
-    head -`wc -l Copyright | cut -f1 -d ' '`  | diff Copyright - || ( ( cat Copyright; echo; cat $x) > /tmp/file;  
-    mv /tmp/file $x )  
-    done  
-}
-
-export add_license
-
-
-# JAVA_HOME=/usr/lib/jvm/java-6-oracle
-# ANDROID_HOME=$HOME/Recursos/sdks/android-sdk-linux
-# ANDROID_PLATFORM=$ANDROID_HOME/platforms
-# ANDROID_TOOLS=$ANDROID_HOME/platform-tools
-# ANDROID_TOOL=$ANDROID_HOME/tools
-# NDKROOT=$HOME/Recursos/sdks/android-ndk-r9c
-# ANDROID_STUDIO=$HOME/Recursos/ides/android-studio
-
-# SCALA_HOME=$HOME/Recursos/java/scala-2.9.2
-# M2_HOME=$HOME/Recursos/java/buildtools/maven
-# M2=$M2_HOME/bin
-# GRADLE_HOME=$HOME/Recursos/java/buildtools/gradle
-# ANT_HOME=$HOME/Recursos/java/buildtools/apache-ant
-# PATH=$PATH:$JAVA_HOME/bin:$M2:$GRADLE_HOME/bin:$ANT_HOME/bin:$PATH:$SCALA_HOME/bin
-NODE="/user/bin/node"
-PATH=$PATH:"/opt/Python34/bin"
-PATH=$PATH:"$HOME/.npm/bin"
-PATH=$PATH:"$HOME/node_modules/.bin"
+GIT_COMMITTER_NAME="tutuca"
+GIT_COMMITTER_NAME="tutuca"
+TESTS_LOGGING_LEVEL=CRITICAL
